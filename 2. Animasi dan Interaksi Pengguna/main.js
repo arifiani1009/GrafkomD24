@@ -2,15 +2,8 @@ function main(){
     var canvas = document.getElementById("myCanvas");
     var gl = canvas.getContext("webgl");
 
-    var vertices = [
-        -0.5, 0.0,   //titik A
-        0.5, 0.0,  //titik B
-        0.0 , 0.8//,   //titik C
-        // 0.5, 0.0   //titik D //dicomment biar jadi 3 titik
-    ];
-
-    var positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    var vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
@@ -21,8 +14,10 @@ function main(){
     gl.compileShader(vertexShader);
 
     var fragmentShaderCode = `
+        precision mediump float;
+        varying vec3 vColor;
         void main(){
-            gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+            gl_FragColor = vec4(vColor, 1.0);
         }
     `;
 
@@ -36,18 +31,28 @@ function main(){
     gl.linkProgram(program);
     gl.useProgram(program);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     var aPos = gl.getAttribLocation(program, "aPosition");
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 0);
     gl.enableVertexAttribArray(aPos);
 
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    var aColor = gl.getAttribLocation(program, "aColor");
+    gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 5 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
+    gl.enableVertexAttribArray(aColor);
 
-    //gl.drawArrays(gl.LINES, 0, 4);
-    //gl.drawArrays(gl.LINE_STRIP, 0, 4);
-    //gl.drawArrays(gl.LINE_LOOP, 0, 4);
-    //gl.drawArrays(gl.TRIANGLES, 0, 6);
-    //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    var dx = 0, dy = 0;
+    function render(time){
+        if (!freeze){
+            dy += 0.01;
+        }
+        translation(dx, dy, 0.0, gl, program);
+
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+        window.requestAnimationFrame(render);
+    }
+
+    render(1);    
 }
