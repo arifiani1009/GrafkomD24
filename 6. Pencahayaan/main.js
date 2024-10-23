@@ -9,6 +9,9 @@ function main(){
     quad(5, 4, 7, 6); // Kubus belakang
     quad(6, 2, 1, 5); // Kubus bawah
 
+    print(vertices);
+
+    //vertex buffer
     var vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -108,11 +111,11 @@ function main(){
     var uProjection = gl.getUniformLocation(shaderProgram, 'u_Projection');
 
     var uAmbientColor = gl.getUniformLocation(shaderProgram, 'u_AmbientColor');
-    gl.uniform3fv(uAmbientColor, [0.1, 0.1, 0.1]);
+    gl.uniform3fv(uAmbientColor, [0.9, 0.9, 0.9]);
     var uDiffuseColor = gl.getUniformLocation(shaderProgram, 'u_DiffuseColor');
     gl.uniform3fv(uDiffuseColor, [0.9, 0.9, 0.9]);
     var uDiffusePosition = gl.getUniformLocation(shaderProgram, 'u_DiffusePosition');
-    gl.uniform3fv(uDiffusePosition, [0.0, 0.0, 1.0]);
+    gl.uniform3fv(uDiffusePosition, [0.0, 0.5, 1.0]);
     var uNormal = gl.getUniformLocation(shaderProgram, 'u_Normal');
 
     var theta = glMatrix.glMatrix.toRadian(1); // 1 derajat
