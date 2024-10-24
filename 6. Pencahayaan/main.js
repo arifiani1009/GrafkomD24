@@ -9,8 +9,6 @@ function main(){
     quad(5, 4, 7, 6); // Kubus belakang
     quad(6, 2, 1, 5); // Kubus bawah
 
-    print(vertices);
-
     //vertex buffer
     var vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -111,7 +109,7 @@ function main(){
     var uProjection = gl.getUniformLocation(shaderProgram, 'u_Projection');
 
     var uAmbientColor = gl.getUniformLocation(shaderProgram, 'u_AmbientColor');
-    gl.uniform3fv(uAmbientColor, [0.9, 0.9, 0.9]);
+    gl.uniform3fv(uAmbientColor, [0.1, 0.1, 0.1]);
     var uDiffuseColor = gl.getUniformLocation(shaderProgram, 'u_DiffuseColor');
     gl.uniform3fv(uDiffuseColor, [0.9, 0.9, 0.9]);
     var uDiffusePosition = gl.getUniformLocation(shaderProgram, 'u_DiffusePosition');
