@@ -15,21 +15,20 @@
     </canvas>
 
     <script id="vertexShaderCode" type="notjs">
-        attribute vec3 a_Position;
-        attribute vec3 a_Color;
-        attribute vec3 a_Normal;
-        varying vec3 v_Position;
-        varying vec3 v_Color;
-        varying vec3 v_Normal;
-        uniform mat4 u_Projection;
-        uniform mat4 u_View;
-        uniform mat4 u_Model;
-        uniform mat3 u_Normal;  // Sebagai model matrix-nya vektor normal
+        attribute vec3 aPosition;
+        attribute vec3 aColor;
+        attribute vec3 aNormal;
+        varying vec3 vPosition;
+        varying vec3 vColor;
+        varying vec3 vNormal;
+        uniform mat4 uProjection;
+        uniform mat4 uView;
+        uniform mat4 uModel;
         void main() {
-            gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0);
-            v_Position = (u_Model * vec4(a_Position, 1.0)).xyz;
-            v_Color = a_Color;
-            v_Normal = normalize(u_Normal * a_Normal);
+            gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
+            vPosition = (uModel * vec4(aPosition, 1.0)).xyz;
+            vColor = aColor;
+            vNormal = aNormal;
         }
     </script>
 </body>

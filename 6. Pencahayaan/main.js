@@ -27,20 +27,41 @@ function main(){
 
     var fragmentShaderCode = `
         precision mediump float;
-        varying vec3 v_Position;
-        varying vec3 v_Color;
-        varying vec3 v_Normal;
-        uniform vec3 u_AmbientColor;
-        uniform vec3 u_DiffuseColor;
-        uniform vec3 u_DiffusePosition;
+        varying vec3 vPosition;
+        varying vec3 vColor;
+        varying vec3 vNormal;
+        uniform vec3 uAmbientColor;
+        uniform float uAmbientIntensity;
+        uniform vec3 uDiffuseColor;
+        uniform vec3 uDiffusePosition;
+        uniform mat3 uNormal;  // Sebagai model matrix-nya vektor normal
+        uniform vec3 uViewerPosition;
         void main() {
             // Vektor cahaya = titik sumber cahaya - titik verteks
-            vec3 lightPos = u_DiffusePosition;
-            vec3 v_light = normalize(lightPos - v_Position);
-            float dotNL = max(dot(v_Normal, v_light), 0.0);
-            vec3 diffuse = v_Color * u_DiffuseColor * dotNL;
-            vec3 ambient = v_Color * u_AmbientColor;
-            gl_FragColor = vec4(ambient + diffuse, 1.0);
+            vec3 lightPos = uDiffusePosition;
+            vec3 vlight = normalize(lightPos - vPosition);
+            vec3 normalizedNormal = normalize(uNormal * vNormal);
+
+            vec3 ambient = vColor * uAmbientColor * uAmbientIntensity;
+
+            float cosTheta = dot(normalizedNormal, vlight);
+            vec3 diffuse = vec3(0., 0., 0.);
+            if (cosTheta > 0.) {
+                float diffuseIntensity = cosTheta;
+                diffuse = vColor * uDiffuseColor * diffuseIntensity;
+            }
+            vec3 reflector = reflect(-vlight, normalizedNormal);
+            vec3 normalizedReflector = normalize(reflector);
+            vec3 normalizedViewer = normalize(uViewerPosition - vPosition);
+            float cosPhi = dot(normalizedReflector, normalizedViewer);
+            vec3 specular = vec3(0., 0., 0.);
+            if (cosPhi > 0.) {
+                float shininessConstant = 100.0; 
+                float specularIntensity = pow(cosPhi, shininessConstant); 
+                specular = vColor * uDiffuseColor * specularIntensity;
+            }
+            vec3 phong = ambient + diffuse + specular;
+            gl_FragColor = vec4(phong, 1.0);
         }
     `;
 
@@ -48,16 +69,16 @@ function main(){
     gl.shaderSource(fragmentShader, fragmentShaderCode);
     gl.compileShader(fragmentShader);    
 
-    var shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-    gl.useProgram(shaderProgram);
+    var program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    var aPosition = gl.getAttribLocation(shaderProgram, "a_Position");
-    var aColor = gl.getAttribLocation(shaderProgram, "a_Color");
-    var aNormal = gl.getAttribLocation(shaderProgram, "a_Normal");
+    var aPosition = gl.getAttribLocation(program, "aPosition");
+    var aColor = gl.getAttribLocation(program, "aColor");
+    var aNormal = gl.getAttribLocation(program, "aNormal");
     gl.vertexAttribPointer(
         aPosition, 
         3, 
@@ -92,8 +113,9 @@ function main(){
 
     var model = glMatrix.mat4.create();
     var view = glMatrix.mat4.create();
+    var camera = [0, 0, 2];
     glMatrix.mat4.lookAt(view,
-        [0.0, 0.0, 2.0], // di mana posisi kamera (posisi)
+        camera, // di mana posisi kamera (posisi)
         [0.0, 0.0, -2.0], // ke mana kamera menghadap (vektor)
         [0.0, 1.0, 0.0] // ke mana arah atas kamera (vektor)
         );
@@ -104,17 +126,22 @@ function main(){
         0.5,  // near
         10.0  // far
         );
-    var uModel = gl.getUniformLocation(shaderProgram, 'u_Model');
-    var uView = gl.getUniformLocation(shaderProgram, 'u_View');
-    var uProjection = gl.getUniformLocation(shaderProgram, 'u_Projection');
+    var uModel = gl.getUniformLocation(program, 'uModel');
+    var uView = gl.getUniformLocation(program, 'uView');
+    var uProjection = gl.getUniformLocation(program, 'uProjection');
 
-    var uAmbientColor = gl.getUniformLocation(shaderProgram, 'u_AmbientColor');
+    var uAmbientColor = gl.getUniformLocation(program, 'uAmbientColor');
     gl.uniform3fv(uAmbientColor, [0.1, 0.1, 0.1]);
-    var uDiffuseColor = gl.getUniformLocation(shaderProgram, 'u_DiffuseColor');
-    gl.uniform3fv(uDiffuseColor, [0.9, 0.9, 0.9]);
-    var uDiffusePosition = gl.getUniformLocation(shaderProgram, 'u_DiffusePosition');
-    gl.uniform3fv(uDiffusePosition, [0.0, 0.5, 1.0]);
-    var uNormal = gl.getUniformLocation(shaderProgram, 'u_Normal');
+    var uAmbientIntensity = gl.getUniformLocation(program, 'uAmbientIntensity');
+    gl.uniform1f(uAmbientIntensity, 0.3); //30%
+    var uDiffuseColor = gl.getUniformLocation(program, 'uDiffuseColor');
+    gl.uniform3fv(uDiffuseColor, [1.0, 1.0, 1.0]);
+    var uDiffusePosition = gl.getUniformLocation(program, 'uDiffusePosition');
+    gl.uniform3fv(uDiffusePosition, [0.0, 0.8, 1.0]);
+    var uNormal = gl.getUniformLocation(program, 'uNormal');
+
+    var uViewerPosition = gl.getUniformLocation(program, "uViewerPosition");
+    gl.uniform3fv(uViewerPosition, camera);
 
     var theta = glMatrix.glMatrix.toRadian(1); // 1 derajat
     function render() {
